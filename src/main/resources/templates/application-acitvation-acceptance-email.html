@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congratulations! Your Application Has Been Accepted</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            line-height: 1.6;
+            color: #4a5568;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #001200 0%, #003300 100%);
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="90" cy="10" r="8" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="90" r="12" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="30" r="6" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.2;
+        }
+
+        .celebration {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+            position: relative;
+        }
+
+        .logo {
+            width: 160px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .greeting {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .job-details {
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+            padding: 35px;
+            border-radius: 20px;
+            margin: 40px 0;
+            border: 2px solid #c6f6d5;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .detail-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #001200;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .detail-text {
+            flex: 1;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #4a5568;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .next-steps {
+            background: #ebf8ff;
+            padding: 30px;
+            border-radius: 18px;
+            margin: 35px 0;
+            border-left: 5px solid #3182ce;
+        }
+
+        .next-steps h3 {
+            color: #2c5282;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps-list li {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .steps-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .activation-box {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 40px 0;
+            border: 2px dashed #d97706;
+        }
+
+        .activation-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #001200 0%, #003300 100%);
+            color: white;
+            text-decoration: none;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 80, 0, 0.4);
+            margin: 20px 0;
+        }
+
+        .activation-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 80, 0, 0.5);
+        }
+
+        .support-section {
+            background: #f8fafc;
+            padding: 35px;
+            border-radius: 18px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .support-contact {
+            color: #2c5282;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .footer {
+            background: #001200;
+            color: white;
+            text-align: center;
+            padding: 50px 40px;
+        }
+
+        .footer-content {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .footer p {
+            margin: 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .footer-links {
+            margin: 30px 0;
+        }
+
+        .footer-link {
+            color: #a0aec0;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px;
+            }
+
+            .header {
+                padding: 40px 25px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .celebration {
+                font-size: 60px;
+            }
+
+            .job-details, .next-steps, .activation-box {
+                padding: 25px;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #001200;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://majjid.com/erpLogo.png" alt="ERP-Solutions Logo" class="logo">
+        <div class="celebration">🎉</div>
+        <h1>Congratulations! You've Been Accepted!</h1>
+    </div>
+
+    <div class="content">
+        <p class="greeting">
+            Dear <span th:text="${candidateName}">Candidate</span>,<br>
+            We are thrilled to inform you that your application has been <strong>successfully accepted</strong>!
+        </p>
+
+        <div class="job-details">
+            <div class="detail-item">
+                <div class="detail-icon">📋</div>
+                <div class="detail-text">
+                    <div class="detail-label">POSITION</div>
+                    <div class="detail-value" th:text="${jobTitle}">Job Title</div>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">🏢</div>
+                <div class="detail-text">
+                    <div class="detail-label">COMPANY</div>
+                    <div class="detail-value">ERP-Solutions</div>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">⭐</div>
+                <div class="detail-text">
+                    <div class="detail-label">STATUS</div>
+                    <div class="detail-value">Application Accepted</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="next-steps">
+            <h3>📋 Next Steps in Your Journey</h3>
+            <ul class="steps-list">
+                <li>Complete your account activation to access your candidate portal</li>
+                <li>Review the job details and requirements</li>
+                <li>Prepare for the upcoming interview process</li>
+                <li>Upload any additional required documents</li>
+                <li>Stay updated through your candidate dashboard</li>
+            </ul>
+        </div>
+
+        <div class="activation-box">
+            <h3 style="color: #d97706; margin-bottom: 20px;">🚀 Activate Your Account</h3>
+            <p style="margin-bottom: 25px; color: #4a5568;">
+                To proceed with your application, you need to activate your account and complete your profile.
+            </p>
+            <a th:href="${baseUrl} + '/activate-account'" class="activation-button">
+                Activate My Account
+            </a>
+            <p style="font-size: 14px; color: #6b7280; margin-top: 15px;">
+                Activation link expires in 24 hours
+            </p>
+        </div>
+
+        <div class="support-section">
+            <h4 style="margin-bottom: 15px; color: #2d3748;">💬 Need Assistance?</h4>
+            <p style="margin-bottom: 10px; color: #4a5568;">
+                Our HR team is here to help you with any questions about the position or the next steps.
+            </p>
+            <p>
+                📧 <a href="mailto:hr@erp-solutions.com" class="support-contact">hr@erp-solutions.com</a><br>
+                📞 <a href="tel:+11234567890" class="support-contact">+1 (123) 456-7890</a>
+            </p>
+        </div>
+
+        <p style="text-align: center; color: #6b7280; margin-top: 40px; font-style: italic;">
+            "Welcome to the ERP-Solutions family! We're excited to see the great things we'll achieve together."
+        </p>
+    </div>
+
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Careers</a> •
+                <a href="#" class="footer-link">Privacy Policy</a> •
+                <a href="#" class="footer-link">Terms of Service</a>
+            </div>
+
+            <p>© 2025 ERP-Solutions. All rights reserved.</p>
+            <p>123 Innovation Drive, Tech City, TC 12345</p>
+            <p>Transforming businesses through innovative solutions</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
