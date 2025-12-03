@@ -57,6 +57,16 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- MapStruct Processor -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
+			<version>1.5.5.Final</version>
+			<scope>provided</scope>
+		</dependency>
+
+
+
 		<!-- JWT (API) -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
