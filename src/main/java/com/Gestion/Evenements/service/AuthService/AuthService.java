@@ -28,42 +28,88 @@ public class AuthService implements IAuthService {
 
     // ----------------- REGISTER -----------------
 
-    @Transactional
-    @Override
-    public AuthResponse register(RegisterRequest request) throws MessagingException {
+//    @Transactional
+//    @Override
+//    public AuthResponse register(RegisterRequest request) throws MessagingException {
+//
+//        if (userRepository.existsByEmail(request.getEmail())) {
+//            throw new RuntimeException("Email already exists");
+//        }
+//
+//        if (userRepository.existsByUsername(request.getUsername())) {
+//            throw new RuntimeException("Username already exists");
+//        }
+//
+//        String verificationCode = generateVerificationCode();
+//
+//        User user = new User();
+//        user.setUsername(request.getUsername());
+//        user.setEmail(request.getEmail());
+//        user.setPassword(passwordEncoder.encode(request.getPassword()));
+//        user.setRoles(Set.of(Role.ROLE_USER));
+//        user.setEnabled(false);
+//        user.setVerificationCode(verificationCode);
+//
+//        userRepository.save(user);
+//
+//        emailService.sendVerificationEmail(request.getEmail(), verificationCode);
+//
+//        // Création du token d’inscription via JWTService
+//        String registrationToken = jwtService.generateRegistrationToken(user.getEmail());
+//
+//        return new AuthResponse(
+//                registrationToken,
+//                user.getUsername(),
+//                user.getEmail(),
+//                user.getRoles()
+//        );
+//    }
+@Transactional
+@Override
+public AuthResponse register(RegisterRequest request) throws MessagingException {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        String verificationCode = generateVerificationCode();
-
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Set.of(Role.ROLE_USER));
-        user.setEnabled(false);
-        user.setVerificationCode(verificationCode);
-
-        userRepository.save(user);
-
-        emailService.sendVerificationEmail(request.getEmail(), verificationCode);
-
-        // Création du token d’inscription via JWTService
-        String registrationToken = jwtService.generateRegistrationToken(user.getEmail());
-
-        return new AuthResponse(
-                registrationToken,
-                user.getUsername(),
-                user.getEmail(),
-                user.getRoles()
-        );
+    if (userRepository.existsByEmail(request.getEmail())) {
+        throw new RuntimeException("Email already exists");
     }
+
+    if (userRepository.existsByUsername(request.getUsername())) {
+        throw new RuntimeException("Username already exists");
+    }
+
+    // --------- Sécurité : éviter que n'importe qui devienne ADMIN ----------
+    Role requestedRole = request.getRole();
+    if (requestedRole == null) {
+        requestedRole = Role.ROLE_USER; // Default
+    } else if (requestedRole == Role.ROLE_ADMIN) {
+        throw new RuntimeException("You cannot create an admin account manually");
+    }
+
+    // -------- Création utilisateur ----------
+    String verificationCode = generateVerificationCode();
+
+    User user = new User();
+    user.setUsername(request.getUsername());
+    user.setEmail(request.getEmail());
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
+    user.setRoles(Set.of(requestedRole));   // ⭐ Role choisi
+    user.setEnabled(false);
+    user.setVerificationCode(verificationCode);
+
+    userRepository.save(user);
+
+    // -------- Email verification ----------
+    emailService.sendVerificationEmail(request.getEmail(), verificationCode);
+
+    String registrationToken = jwtService.generateRegistrationToken(user.getEmail());
+
+    return new AuthResponse(
+            registrationToken,
+            user.getUsername(),
+            user.getEmail(),
+            user.getRoles()
+    );
+}
+
 
     // -------------------- VERIFY ACCOUNT -----------------------
 
@@ -88,26 +134,50 @@ public class AuthService implements IAuthService {
 
     // ----------------- LOGIN -----------------
 
-    @Override
-    public AuthResponse login(LoginRequest request) {
+//    @Override
+//    public AuthResponse login(LoginRequest request) {
+//
+//        User user = userRepository.findByEmail(request.getEmail())
+//                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+//
+//        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+//            throw new RuntimeException("Invalid credentials");
+//        }
+//
+//        // Token 100% via JWTService
+//        String accessToken = jwtService.generateAccessToken(user.getEmail(), Role.ROLE_USER);
+//
+//        return new AuthResponse(
+//                accessToken,
+//                user.getUsername(),
+//                user.getEmail(),
+//                user.getRoles()
+//        );
+//    }
+@Override
+public AuthResponse login(LoginRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+    User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-
-        // Token 100% via JWTService
-        String accessToken = jwtService.generateAccessToken(user.getEmail(), Role.ROLE_USER);
-
-        return new AuthResponse(
-                accessToken,
-                user.getUsername(),
-                user.getEmail(),
-                user.getRoles()
-        );
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        throw new RuntimeException("Invalid credentials");
     }
+
+    // Correct : inclure le vrai rôle de l'utilisateur
+    String token = jwtService.generateAccessToken(
+            user.getEmail(),
+            user.getRoles().iterator().next() // Simplification (1 rôle)
+    );
+
+    return new AuthResponse(
+            token,
+            user.getUsername(),
+            user.getEmail(),
+            user.getRoles()
+    );
+}
+
 
     // ------------------ UTIL ------------------
 

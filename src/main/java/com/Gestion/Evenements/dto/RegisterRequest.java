@@ -1,5 +1,6 @@
 package com.Gestion.Evenements.dto;
 
+import com.Gestion.Evenements.models.enums.Role;
 import jakarta.persistence.Column;
 
 import jakarta.validation.constraints.*;
@@ -25,7 +26,7 @@ public class RegisterRequest {
             message = "Invalid phone number format")
     @Column(name = "PhoneNumber", nullable = false, length = 20)
     private String phoneNumber;
-
+    private Role role;
 
 
 
