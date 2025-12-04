@@ -7,6 +7,7 @@ import com.Gestion.Evenements.models.enums.ReservationStatus;
 import com.Gestion.Evenements.repo.EventRepository;
 import com.Gestion.Evenements.repo.ReservationRepository;
 import com.Gestion.Evenements.repo.UserRepository;
+import com.Gestion.Evenements.service.NotificationService.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class ReservationService implements IReservationService {
     private final ReservationRepository reservationRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public Reservation createReservation(Long eventId, Long userId, int quantity) {
@@ -57,8 +59,13 @@ public class ReservationService implements IReservationService {
         event.setTicketsSold(event.getTicketsSold() + quantity);
         eventRepository.save(event);
 
+        // 🔹 Envoi email via l'instance injectée
+        User user1 = userRepository.findById(userId).orElseThrow();
+        notificationService.sendReservationEmail(saved, user.getUsername(), user.getEmail());
+
         return saved;
     }
+
 
     public List<Reservation> getUserReservations(Long userId) {
         return reservationRepository.findByUserId(userId);

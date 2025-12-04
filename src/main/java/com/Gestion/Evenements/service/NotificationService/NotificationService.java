@@ -1,53 +1,106 @@
 package com.Gestion.Evenements.service.NotificationService;
 
-import com.Gestion.Evenements.models.Reservation;
 import com.Gestion.Evenements.models.Payment;
-import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.Gestion.Evenements.models.Reservation;
+import jakarta.mail.MessagingException;
 import org.springframework.stereotype.Service;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import jakarta.mail.internet.MimeMessage;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
-public class NotificationService implements INotificationService {
+public class NotificationService {
 
     private final JavaMailSender mailSender;
 
-    // Notification après réservation
-    public void sendReservationEmail(Reservation reservation, String toEmail) {
-        String subject = "Reservation Confirmed!";
-        String text = String.format("Your reservation #%d for event #%d has been created.\n" +
-                        "Quantity: %d\nTotal: %.2f\nStatus: %s",
-                reservation.getId(),
-                reservation.getEventId(),
-                reservation.getQuantity(),
-                reservation.getTotalAmount(),
-                reservation.getStatus()
-        );
-
-        sendEmail(toEmail, subject, text);
+    public NotificationService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
     }
 
-    // Notification après paiement
-    public void sendPaymentEmail(Payment payment, String toEmail) {
-        String subject = "Payment " + payment.getStatus();
-        String text = String.format("Your payment for reservation #%d has been processed.\n" +
-                        "Amount: %.2f\nMethod: %s\nStatus: %s",
-                payment.getReservation().getId(),
-                payment.getAmount(),
-                payment.getMethod(),
-                payment.getStatus()
-        );
+    // Lire un fichier HTML dans /templates/
+    private String loadHtmlTemplate(String fileName) {
+        try {
+            InputStream inputStream = getClass()
+                    .getClassLoader()
+                    .getResourceAsStream("templates/" + fileName);
 
-        sendEmail(toEmail, subject, text);
+            if (inputStream == null) {
+                throw new RuntimeException("Template not found: " + fileName);
+            }
+
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading HTML template: " + fileName);
+        }
     }
 
-    // Méthode privée pour envoyer l'email
-    private void sendEmail(String to, String subject, String text) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(text);
-        mailSender.send(message);
+    // Remplacer les variables ${variable}
+    private String replaceVariables(String html, Map<String, Object> vars) {
+        String result = html;
+        for (String key : vars.keySet()) {
+            result = result.replace("${" + key + "}", String.valueOf(vars.get(key)));
+        }
+        return result;
+    }
+
+    private void sendHtmlEmail(String to, String subject, String htmlContent) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true); // HTML
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
+    }
+
+    // === RESERVATION EMAIL ===
+    public void sendReservationEmail(Reservation reservation, String userName, String toEmail) {
+
+        String html = loadHtmlTemplate("Reservation-Confirmation.html");
+
+        Map<String, Object> vars = Map.of(
+                "userName", userName,
+                "reservationId", reservation.getId(),
+                "eventId", reservation.getEventId(),
+                "quantity", reservation.getQuantity(),
+                "totalAmount", reservation.getTotalAmount(),
+                "status", reservation.getStatus()
+        );
+
+        html = replaceVariables(html, vars);
+
+        sendHtmlEmail(toEmail, "Reservation Confirmation", html);
+    }
+
+    // === PAYMENT EMAIL ===
+    public void sendPaymentEmail(Payment payment, String userName, String toEmail) {
+
+        String html = loadHtmlTemplate("Payment-Confirmation.html");
+
+        Map<String, Object> vars = Map.of(
+                "userName", userName,
+                "reservationId", payment.getReservation().getId(),
+                "amount", payment.getAmount(),
+                "method", payment.getMethod(),
+                "status", payment.getStatus()
+        );
+
+        html = replaceVariables(html, vars);
+
+        sendHtmlEmail(toEmail, "Payment Confirmation", html);
     }
 }

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Confirmation - Gestion Events</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { background: #1a73e8; padding: 40px; text-align: center; color: white; }
+        .header h1 { font-size: 28px; }
+        .content { padding: 40px; text-align: center; color: #333; }
+        .content p { font-size: 16px; margin-bottom: 20px; }
+        .reservation-details { background: #f0f9ff; padding: 20px; border-radius: 15px; margin-top: 20px; }
+        .reservation-details h2 { color: #1a73e8; font-size: 18px; margin-bottom: 10px; }
+        .footer { background: #1a73e8; color: white; text-align: center; padding: 30px; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Reservation Confirmed!</h1>
+    </div>
+    <div class="content">
+        <p>Hi ${userName}, your reservation has been successfully created!</p>
+        <div class="reservation-details">
+            <h2>Reservation #${reservationId}</h2>
+            <p>Event ID: ${eventId}</p>
+            <p>Quantity: ${quantity}</p>
+            <p>Total Amount: $${totalAmount}</p>
+            <p>Status: ${status}</p>
+        </div>
+    </div>
+    <div class="footer">
+        © 2025 Gestion-Events. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

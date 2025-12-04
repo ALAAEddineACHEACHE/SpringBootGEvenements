@@ -14,9 +14,6 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class TokenCleanupTask {
     private final ExpiredTokenRepo expiredTokenRepo;
-
-//    private final ExpiredTokenRepo expiredTokenRepo;
-
     // Run every day at 2 AM to clean up tokens older than 30 days
     @Scheduled(cron = "0 0 2 * * ?")
     @Transactional
