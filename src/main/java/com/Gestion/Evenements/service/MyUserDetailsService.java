@@ -18,12 +18,12 @@ public class MyUserDetailsService implements UserDetailsService {
      * Chargement par username (Spring Security utilise "username").
      */
     @Override
-    public UserDetails loadUserByUsername(String username)
+    public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + username));
+                        new UsernameNotFoundException("User not found: " + email));
 
         return UserPrincipal.create(user);
     }
@@ -31,16 +31,17 @@ public class MyUserDetailsService implements UserDetailsService {
     /**
      * Chargement utilisé quand tu veux valider un JWT avec TokenType.
      */
-    public UserDetails loadUserByUsernameTokenType(
-            String username,
-            TokenType tokenType,
-            String token
-    ) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsernameTokenType(String email, TokenType tokenType, String token) throws UsernameNotFoundException {
+        System.out.println("DEBUG: Searching for user with email = '" + email + "'");
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + username));
+                        new UsernameNotFoundException("User not found: " + email));
+
+        System.out.println("DEBUG: Found user: " + user.getEmail());
 
         return UserPrincipal.create(user, tokenType, token);
     }
+
+
 }

@@ -45,6 +45,9 @@ public class AuthController {
     public AuthResponse login(@RequestBody LoginRequest request) {
         return authService.login(request);
     }
+
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);

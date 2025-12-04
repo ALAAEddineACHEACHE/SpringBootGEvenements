@@ -17,139 +17,106 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-
 @Service
 @RequiredArgsConstructor
 public class JWTService {
 
-    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
-
-    // EXPIRATIONS
-    // 24 hours = 24 * 60 * 60 * 1000 = 86_400_000 ms
-    private static final long TOKEN_EXP_24H = 86_400_000L;
-
-    // 30 days = 30 * 24 * 60 * 60 * 1000 = 2_592_000_000 ms
-    private static final long TOKEN_EXP_30D = 2_592_000_000L;
-    // 24 hours = 86_400_000 ms
-    private static final long RESET_PASSWORD_TOKEN = 3600_000L;
+    private static final String SECRET_KEY =
+            "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    // Expirations
+    private static final long EXP_24H = 86_400_000;
+    private static final long EXP_30D = 2_592_000_000L;
+    private static final long RESET_PASSWORD_EXP = 3_600_000;
 
     private final ExpiredTokenRepo expiredTokenRepo;
 
     private final Map<String, Boolean> tokenBlacklistCache = new HashMap<>();
 
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    }
 
-    // ------------------ TOKEN VALIDATION ------------------
+    // ---------------- VALIDATION ----------------
+
     public boolean isTokenValid(String token) {
-        if (isTokenBlacklisted(token)) {
-            throw new CustomAppException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Token revoked",
-                    "This token has been revoked. Please log in again."
-            );
-        }
+        if (isTokenBlacklisted(token))
+            throw new CustomAppException(HttpStatus.UNAUTHORIZED, "Token revoked",
+                    "This token has been revoked.");
 
-        final String email = extractEmail(token);
-        final TokenType tokenType = extractTokenType(token);
-
-        return !isTokenExpired(token) && email != null && tokenType != null;
+        return !isTokenExpired(token);
     }
 
     public boolean isTokenBlacklisted(String token) {
-        if (tokenBlacklistCache.containsKey(token)) {
+        if (tokenBlacklistCache.containsKey(token))
             return tokenBlacklistCache.get(token);
-        }
 
-        boolean isBlacklisted = expiredTokenRepo.existsByToken(token);
-        tokenBlacklistCache.put(token, isBlacklisted);
-
-        return isBlacklisted;
+        boolean exists = expiredTokenRepo.existsByToken(token);
+        tokenBlacklistCache.put(token, exists);
+        return exists;
     }
 
+    public void blacklistToken(String token) {
+        Claims claims = extractAllClaims(token);
 
-    public void addToBlacklist(String token) {
-        try {
-            Claims claims = extractAllClaims(token);
-            String email = claims.getSubject();
-            TokenType tokenType = TokenType.valueOf(claims.get("type", String.class));
-            Date expirationDate = claims.getExpiration();
+        ExpiredToken expired = new ExpiredToken(
+                token,
+                TokenType.valueOf(claims.get("type", String.class)),
+                claims.getSubject(),
+                claims.getExpiration()
+        );
 
-            ExpiredToken expiredToken = new ExpiredToken(token, tokenType, email, expirationDate);
-            expiredTokenRepo.save(expiredToken);
-
-            tokenBlacklistCache.put(token, true);
-        } catch (Exception e) {
-            throw new CustomAppException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid token",
-                    "Cannot blacklist invalid token."
-            );
-        }
+        expiredTokenRepo.save(expired);
+        tokenBlacklistCache.put(token, true);
     }
 
+    // ---------------- CREATION ----------------
 
-    // ------------------ TOKEN GENERATION ------------------
-
-    public String generateRegistrationToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("type", TokenType.REGISTER_TOKEN);
-
-        return createToken(claims, email, TOKEN_EXP_24H);
-    }
-
-
-    /**
-     * Generate token based on ROLE (Admin, Organizer, User)
-     */
     public String generateAccessToken(String email, Role role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", TokenType.ACCESS_TOKEN);
         claims.put("role", role.name());
 
-        long expiration = switch (role) {
-            case ROLE_ADMIN -> TOKEN_EXP_24H;
-            case ROLE_ORGANIZER -> TOKEN_EXP_24H;
-            case ROLE_USER -> TOKEN_EXP_30D; // normal user → token long
-            default -> TOKEN_EXP_24H;
-        };
+        long exp = (role == Role.ROLE_USER) ? EXP_30D : EXP_24H;
 
-        return createToken(claims, email, expiration);
+        return createToken(claims, email, exp);
     }
 
+    public String generateRegistrationToken(String email) {
+        Map<String, Object> claims = Map.of("type", TokenType.REGISTER_TOKEN);
+        return createToken(claims, email, EXP_24H);
+    }
 
     public String generateResetPasswordToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("type", TokenType.RESET_PASSWORD_TOKEN);
-
-        return createToken(claims, email, TOKEN_EXP_24H);
+        Map<String, Object> claims = Map.of("type", TokenType.RESET_PASSWORD_TOKEN);
+        return createToken(claims, email, RESET_PASSWORD_EXP);
     }
 
-
-    // Generic createToken
     private String createToken(Map<String, Object> claims, String subject, long expiration) {
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .claims(claims)
+                .subject(subject)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
+    // ---------------- EXTRACTION ----------------
 
-    // ------------------ EXTRACT DATA ------------------
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     public TokenType extractTokenType(String token) {
         Claims claims = extractAllClaims(token);
-        String typeValue = claims.get("type", String.class);
 
-        return TokenType.valueOf(typeValue);
+        // 🔥 Ligne de debug à ajouter
+        System.out.println("DEBUG TOKEN TYPE RAW = " + claims.get("type"));
+
+        return TokenType.valueOf(claims.get("type", String.class));
     }
 
 
-    // ------------------ CHECKS ------------------
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
@@ -159,27 +126,53 @@ public class JWTService {
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        final Claims claims = extractAllClaims(token);
-        return resolver.apply(claims);
+        return resolver.apply(extractAllClaims(token));
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-
         } catch (ExpiredJwtException e) {
-            throw new CustomAppException(HttpStatus.UNAUTHORIZED, "Token expired", "Your token has expired.");
+            throw new CustomAppException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Token expired",
+                    "Your token has expired. Please log in again."
+            );
+        } catch (UnsupportedJwtException e) {
+            throw new CustomAppException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Unsupported token",
+                    "The token format is not supported."
+            );
+        } catch (MalformedJwtException e) {
+            throw new CustomAppException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Malformed token",
+                    "The token is malformed or corrupted."
+            );
+        } catch (SignatureException e) {
+            throw new CustomAppException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid token signature",
+                    "The token signature is invalid."
+            );
+        } catch (IllegalArgumentException e) {
+            throw new CustomAppException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid token",
+                    "The token is empty or null."
+            );
         } catch (Exception e) {
-            throw new CustomAppException(HttpStatus.UNAUTHORIZED, "Invalid token", "Failed to parse token.");
+            throw new CustomAppException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Token validation failed",
+                    "Failed to parse the token."
+            );
         }
     }
 
-
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    }
 }

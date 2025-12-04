@@ -7,20 +7,15 @@ import com.Gestion.Evenements.dto.RegisterRequest;
 import com.Gestion.Evenements.models.User;
 import com.Gestion.Evenements.models.enums.Role;
 import com.Gestion.Evenements.repo.UserRepository;
-
-
 import com.Gestion.Evenements.service.EmailService;
-import com.Gestion.Evenements.utils.JwtUtils;
+import com.Gestion.Evenements.service.JWTService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +23,10 @@ public class AuthService implements IAuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtils jwtUtils;
-    private final EmailService emailService; // 🔥 À ajouter
+    private final JWTService jwtService;   // 🔥 ON UTILISE LE NOUVEAU SERVICE
+    private final EmailService emailService;
+
+    // ----------------- REGISTER -----------------
 
     @Transactional
     @Override
@@ -57,15 +54,18 @@ public class AuthService implements IAuthService {
 
         emailService.sendVerificationEmail(request.getEmail(), verificationCode);
 
-        // Crée l'objet AuthResponse
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setToken(jwtUtils.generateRegistrationToken(user.getEmail(), "REGISTER_TOKEN"));
-        authResponse.setUsername(user.getUsername());
-        authResponse.setEmail(user.getEmail());
-        authResponse.setRoles(user.getRoles());
+        // Création du token d’inscription via JWTService
+        String registrationToken = jwtService.generateRegistrationToken(user.getEmail());
 
-        return authResponse;
+        return new AuthResponse(
+                registrationToken,
+                user.getUsername(),
+                user.getEmail(),
+                user.getRoles()
+        );
     }
+
+    // -------------------- VERIFY ACCOUNT -----------------------
 
     @Transactional
     @Override
@@ -85,11 +85,9 @@ public class AuthService implements IAuthService {
         return new MessageResponse("Account verified successfully");
     }
 
-    private String generateVerificationCode() {
-        Random random = new Random();
-        int code = 1000 + random.nextInt(9000);
-        return String.valueOf(code);
-    }
+
+    // ----------------- LOGIN -----------------
+
     @Override
     public AuthResponse login(LoginRequest request) {
 
@@ -100,15 +98,22 @@ public class AuthService implements IAuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtils.generateToken(user.getUsername(), user.getRoles());
+        // Token 100% via JWTService
+        String accessToken = jwtService.generateAccessToken(user.getEmail(), Role.ROLE_USER);
 
         return new AuthResponse(
-                token,
+                accessToken,
                 user.getUsername(),
                 user.getEmail(),
                 user.getRoles()
         );
     }
 
+    // ------------------ UTIL ------------------
 
+    private String generateVerificationCode() {
+        Random random = new Random();
+        int code = 1000 + random.nextInt(9000);
+        return String.valueOf(code);
+    }
 }
