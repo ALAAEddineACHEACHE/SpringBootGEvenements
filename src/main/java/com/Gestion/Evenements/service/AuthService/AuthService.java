@@ -133,27 +133,6 @@ public AuthResponse register(RegisterRequest request) throws MessagingException 
 
 
     // ----------------- LOGIN -----------------
-
-//    @Override
-//    public AuthResponse login(LoginRequest request) {
-//
-//        User user = userRepository.findByEmail(request.getEmail())
-//                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-//
-//        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-//            throw new RuntimeException("Invalid credentials");
-//        }
-//
-//        // Token 100% via JWTService
-//        String accessToken = jwtService.generateAccessToken(user.getEmail(), Role.ROLE_USER);
-//
-//        return new AuthResponse(
-//                accessToken,
-//                user.getUsername(),
-//                user.getEmail(),
-//                user.getRoles()
-//        );
-//    }
 @Override
 public AuthResponse login(LoginRequest request) {
 

@@ -16,7 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ReservationService {
+public class ReservationService implements IReservationService {
 
     private final ReservationRepository reservationRepository;
     private final EventRepository eventRepository;

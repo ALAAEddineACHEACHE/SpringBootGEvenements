@@ -139,23 +139,25 @@ public class DbDataLoader {
         System.out.println("✅ Reservations loaded");
     }
 
-    private void loadPayments() {
-        List<Reservation> reservations = reservationRepository.findAll();
-        Random random = new Random();
+        private void loadPayments() {
+            List<Reservation> reservations = reservationRepository.findAll();
 
-        for (Reservation res : reservations) {
-            Payment payment = Payment.builder()
-                    .reservationId(res.getId())
-                    .amount(BigDecimal.valueOf(res.getTotalAmount()))
-                    .provider("SIMULATED")
-                    .status(random.nextBoolean() ? PaymentStatus.SUCCESS : com.Gestion.Evenements.models.enums.PaymentStatus.FAILED)
-                    .createdAt(LocalDateTime.now().minusDays(random.nextInt(30)))
-                    .updatedAt(LocalDateTime.now())
-                    .failureReason(res.getStatus() == ReservationStatus.CANCELLED ? "User cancelled" : null)
-                    .build();
-            paymentRepository.save(payment);
+            for (Reservation res : reservations) {
+
+                Payment payment = Payment.builder()
+                        .reservation(res)  // Relation directe
+                        .amount(res.getTotalAmount())
+                        .status(res.getStatus() == ReservationStatus.PAID ? "SUCCESS" : "FAILED")
+                        .method("SIMULATED")  // ou "CARD"
+                        .paidAt(LocalDateTime.now())
+                        .build();
+
+                paymentRepository.save(payment);
+            }
+
+            System.out.println("✅ Payments loaded");
         }
 
-        System.out.println("✅ Payments loaded");
+
     }
-}
+
