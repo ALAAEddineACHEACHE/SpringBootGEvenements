@@ -1,5 +1,6 @@
 package com.Gestion.Evenements.controller;
 
+import com.Gestion.Evenements.dto.ReservationRequest;
 import com.Gestion.Evenements.models.Reservation;
 import com.Gestion.Evenements.models.UserPrincipal;
 import com.Gestion.Evenements.service.ReservationService.ReservationService;
@@ -17,20 +18,24 @@ import java.util.Map;
 public class ReservationController {
 
     private final ReservationService reservationService;
-
     @PostMapping("/reserve")
-    public ResponseEntity<?> reserve(@RequestParam Long eventId,
-                                     @RequestParam int quantity,
+    public ResponseEntity<?> reserve(@RequestBody ReservationRequest request,
                                      @AuthenticationPrincipal UserPrincipal principal) {
 
         Long userId = principal.getUser().getId();
-        Reservation reservation = reservationService.createReservation(eventId, userId, quantity);
+
+        Reservation reservation = reservationService.createReservation(
+                request.getEventId(),
+                userId,
+                request.getQuantity()
+        );
 
         return ResponseEntity.status(201).body(Map.of(
                 "message", "Reservation created",
                 "reservation", reservation
         ));
     }
+
 
     @GetMapping("/user")
     public ResponseEntity<?> userReservations(@AuthenticationPrincipal UserPrincipal principal) {

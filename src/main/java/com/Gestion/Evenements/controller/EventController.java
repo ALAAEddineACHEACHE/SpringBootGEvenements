@@ -3,6 +3,7 @@ package com.Gestion.Evenements.controller;
 import com.Gestion.Evenements.dto.EventRequest;
 import com.Gestion.Evenements.dto.EventResponse;
 import com.Gestion.Evenements.models.UserPrincipal;
+import com.Gestion.Evenements.models.enums.Role;
 import com.Gestion.Evenements.repo.UserRepository;
 import com.Gestion.Evenements.service.EventService.EventService;
 import lombok.RequiredArgsConstructor;
@@ -30,22 +31,25 @@ public class EventController {
     public EventResponse get(@PathVariable Long id) {
         return eventService.getById(id);
     }
-
     @PostMapping
     public ResponseEntity<?> create(@RequestBody EventRequest request,
                                     @AuthenticationPrincipal UserPrincipal principal) {
-        Long userId = principal.getUser().getId();
-        request.setOrganizerId(userId);
 
-        EventResponse createdEvent = eventService.create(request);
+        if (!principal.getUser().getRoles().contains(Role.ROLE_ORGANIZER)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "message", "Only organizers can create events"
+            ));
+        }
 
-        return ResponseEntity
-                .status(201)
-                .body(Map.of(
-                        "message", "Event created",
-                        "event", createdEvent
-                ));
+        request.setOrganizerId(principal.getUser().getId());
+        EventResponse event = eventService.create(request);
+
+        return ResponseEntity.status(201).body(Map.of(
+                "message", "Event created successfully",
+                "event", event
+        ));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id,
