@@ -34,6 +34,8 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        System.out.println("Incoming request: " + request.getMethod() + " " + request.getServletPath());
+        System.out.println("Authorization header raw: " + request.getHeader("Authorization"));
 
         // 1️⃣ Ignore public endpoints
         if (request.getServletPath().startsWith("/api/auth/")) {
@@ -71,9 +73,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             try {
                 tokenType = jwtService.extractTokenType(token);
-                System.out.println(
-                        "TOKEN TYPE RAW = " + jwtService.extractAllClaims(token).get("type")
-                );
+               // System.out.println("TOKEN TYPE RAW = " + jwtService.extractAllClaims(token).get("type"));
             } catch (MalformedJwtException e) {
                 sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid token", "Malformed JWT token.");
                 return;
@@ -91,8 +91,9 @@ public class JwtFilter extends OncePerRequestFilter {
             // load the user
             UserDetails userDetails = context.getBean(MyUserDetailsService.class)
                     .loadUserByUsernameTokenType(email, tokenType, token);
-            System.out.println("Checking user with email: " + email + " and tokenType: " + tokenType);
+            //System.out.println("Checking user with email: " + email + " and tokenType: " + tokenType);
 
+            System.out.println("Authorization header: " + request.getHeader("Authorization"));
 
             if (userDetails == null) {
                 sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "User not found", "User does not exist for this token.");

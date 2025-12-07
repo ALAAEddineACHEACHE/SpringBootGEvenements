@@ -20,4 +20,6 @@ public class Event {
     private int totalTickets;
     private int ticketsSold = 0;
     private double ticketPrice;
+    private String category;
+    private String imageUrl;
 }

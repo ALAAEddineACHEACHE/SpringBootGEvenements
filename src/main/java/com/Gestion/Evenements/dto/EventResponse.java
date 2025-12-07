@@ -16,5 +16,6 @@ public class EventResponse {
     private int totalTickets;
     private int ticketsSold;
     private double ticketPrice;
-    private int ticketsRemaining; // Champ calculé
+    private int ticketsRemaining;
+    private String category;
 }

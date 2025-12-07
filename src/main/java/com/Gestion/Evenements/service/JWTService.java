@@ -111,7 +111,7 @@ public class JWTService {
         Claims claims = extractAllClaims(token);
 
         // 🔥 Ligne de debug à ajouter
-        System.out.println("DEBUG TOKEN TYPE RAW = " + claims.get("type"));
+       // System.out.println("DEBUG TOKEN TYPE RAW = " + claims.get("type"));
 
         return TokenType.valueOf(claims.get("type", String.class));
     }

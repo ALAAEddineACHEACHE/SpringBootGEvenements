@@ -6,15 +6,22 @@ import com.Gestion.Evenements.models.Event;
 import com.Gestion.Evenements.repo.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
-
+    private final String uploadDir = "data/uploads";
     public List<EventResponse> getAll() {
         return eventRepository.findAll().stream()
                 .map(this::toResponse)
@@ -45,7 +52,7 @@ public class EventService implements IEventService {
         event.setOrganizerId(request.getOrganizerId());
         event.setTotalTickets(request.getTotalTickets());
         event.setTicketPrice(request.getTicketPrice());
-
+        event.setCategory(request.getCategory());
         return toResponse(eventRepository.save(event));
     }
 
@@ -67,21 +74,48 @@ public class EventService implements IEventService {
         resp.setTicketsSold(event.getTicketsSold());
         resp.setTicketPrice(event.getTicketPrice());
         resp.setTicketsRemaining(event.getTotalTickets() - event.getTicketsSold());
+        resp.setCategory(event.getCategory());
         return resp;
     }
 
-    private Event toEntity(EventRequest request) {
-        Event event = new Event();
-        event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
-        event.setLocation(request.getLocation());
-        event.setStartAt(request.getStartAt());
-        event.setEndAt(request.getEndAt());
-        event.setOrganizerId(request.getOrganizerId());
-        event.setTotalTickets(request.getTotalTickets());
-        event.setTicketPrice(request.getTicketPrice());
-        return event;
+//    private Event toEntity(EventRequest request) {
+//        Event event = new Event();
+//        event.setTitle(request.getTitle());
+//        event.setDescription(request.getDescription());
+//        event.setLocation(request.getLocation());
+//        event.setStartAt(request.getStartAt());
+//        event.setEndAt(request.getEndAt());
+//        event.setOrganizerId(request.getOrganizerId());
+//        event.setTotalTickets(request.getTotalTickets());
+//        event.setTicketPrice(request.getTicketPrice());
+//        return event;
+//    }
+private Event toEntity(EventRequest request) {
+    Event event = new Event();
+    event.setTitle(request.getTitle());
+    event.setDescription(request.getDescription());
+    event.setLocation(request.getLocation());
+    event.setStartAt(request.getStartAt());
+    event.setEndAt(request.getEndAt());
+    event.setOrganizerId(request.getOrganizerId());
+    event.setTotalTickets(request.getTotalTickets());
+    event.setTicketPrice(request.getTicketPrice());
+    event.setCategory(request.getCategory());
+
+    // Si tu stockes l'image localement ou dans S3, mets le path/url ici
+    if (request.getImage() != null) {
+        String imagePath = "data/uploads/" + UUID.randomUUID() + "_" + request.getImage().getOriginalFilename();
+        try {
+            request.getImage().transferTo(new File(imagePath));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save image");
+        }
+        event.setImageUrl(imagePath);
     }
+
+    return event;
+}
+
     public void reserveTicket(Long eventId, int quantity) {
         Event event = eventRepository.findByIdForUpdate(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
@@ -91,5 +125,42 @@ public class EventService implements IEventService {
         event.setTicketsSold(event.getTicketsSold() + quantity);
         eventRepository.save(event);
     }
+    public EventResponse updateImage(Long eventId, MultipartFile image) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (image == null || image.isEmpty()) {
+            throw new RuntimeException("No image provided");
+        }
+
+        try {
+            // Chemin absolu
+            String uploadRoot = System.getProperty("user.dir") + "/data/uploads";
+            Path dirPath = Paths.get(uploadRoot);
+
+            // Crée le dossier si nécessaire
+            if (!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
+            }
+
+            // Génère un nom de fichier sûr
+            String filename = UUID.randomUUID().toString() + "_" + image.getOriginalFilename().replaceAll("\\s+", "_");
+            Path filePath = dirPath.resolve(filename);
+
+            // Écriture réelle du fichier
+            Files.copy(image.getInputStream(), filePath);
+
+            // Met à jour l'URL/path dans l'événement
+            event.setImageUrl("/uploads/" + filename);
+            eventRepository.save(event);
+
+            return toResponse(event);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save image", e);
+        }
+    }
+
+
 
 }

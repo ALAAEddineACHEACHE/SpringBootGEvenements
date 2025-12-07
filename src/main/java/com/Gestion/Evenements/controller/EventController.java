@@ -4,13 +4,13 @@ import com.Gestion.Evenements.dto.EventRequest;
 import com.Gestion.Evenements.dto.EventResponse;
 import com.Gestion.Evenements.models.UserPrincipal;
 import com.Gestion.Evenements.models.enums.Role;
-import com.Gestion.Evenements.repo.UserRepository;
 import com.Gestion.Evenements.service.EventService.EventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -73,4 +73,25 @@ public class EventController {
                 "eventId", id
         ));
     }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadOrUpdateImage(
+            @PathVariable Long id,
+            @RequestPart("image") MultipartFile image,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        if (!principal.getUser().getRoles().contains(Role.ROLE_ORGANIZER)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "message", "Only organizers can upload/update images"
+            ));
+        }
+
+        EventResponse updatedEvent = eventService.updateImage(id, image);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Image uploaded/updated successfully",
+                "event", updatedEvent
+        ));
+    }
+
 }
