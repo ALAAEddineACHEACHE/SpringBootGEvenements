@@ -18,6 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
+@CrossOrigin("*")
 public class EventController {
 
     private final EventService eventService;
