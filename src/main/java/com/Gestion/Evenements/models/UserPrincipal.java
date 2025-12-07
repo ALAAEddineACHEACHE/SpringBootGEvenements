@@ -30,13 +30,13 @@ public class UserPrincipal implements UserDetails {
         principal.token = token;
         return principal;
     }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream()
-                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.name()))
+                .map(r -> new SimpleGrantedAuthority(r.name())) // <-- pas de "ROLE_" ici
                 .collect(Collectors.toSet());
     }
+
 
     @Override
     public String getPassword() {

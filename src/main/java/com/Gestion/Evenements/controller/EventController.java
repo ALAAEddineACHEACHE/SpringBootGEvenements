@@ -4,14 +4,25 @@ import com.Gestion.Evenements.dto.EventRequest;
 import com.Gestion.Evenements.dto.EventResponse;
 import com.Gestion.Evenements.models.UserPrincipal;
 import com.Gestion.Evenements.models.enums.Role;
+import com.Gestion.Evenements.service.EventService.EventFileService;
 import com.Gestion.Evenements.service.EventService.EventService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +33,7 @@ import java.util.Map;
 public class EventController {
 
     private final EventService eventService;
+    private final EventFileService eventFileService;
 
     @GetMapping
     public List<EventResponse> all() {
@@ -94,5 +106,12 @@ public class EventController {
                 "event", updatedEvent
         ));
     }
+
+    @GetMapping("/uploads/{filename:.+}")
+    public ResponseEntity<?> getImage(@PathVariable String filename) {
+        return eventFileService.getFile("", filename); // dossier racine "uploads"
+    }
+
+
 
 }

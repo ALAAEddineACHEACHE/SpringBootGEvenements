@@ -21,7 +21,7 @@ import java.util.UUID;
 public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
-    private final String uploadDir = "data/uploads";
+    private final String uploadDir = "uploads";
     public List<EventResponse> getAll() {
         return eventRepository.findAll().stream()
                 .map(this::toResponse)
@@ -135,7 +135,7 @@ private Event toEntity(EventRequest request) {
 
         try {
             // Chemin absolu
-            String uploadRoot = System.getProperty("user.dir") + "/data/uploads";
+            String uploadRoot = System.getProperty("user.dir") + "/uploads";
             Path dirPath = Paths.get(uploadRoot);
 
             // Crée le dossier si nécessaire
@@ -144,14 +144,14 @@ private Event toEntity(EventRequest request) {
             }
 
             // Génère un nom de fichier sûr
-            String filename = UUID.randomUUID().toString() + "_" + image.getOriginalFilename().replaceAll("\\s+", "_");
-            Path filePath = dirPath.resolve(filename);
+            String fileName = image.getOriginalFilename();
+            Path filePath = dirPath.resolve(fileName);
 
             // Écriture réelle du fichier
             Files.copy(image.getInputStream(), filePath);
 
             // Met à jour l'URL/path dans l'événement
-            event.setImageUrl("/uploads/" + filename);
+            event.setImageUrl("/uploads/" + fileName);
             eventRepository.save(event);
 
             return toResponse(event);

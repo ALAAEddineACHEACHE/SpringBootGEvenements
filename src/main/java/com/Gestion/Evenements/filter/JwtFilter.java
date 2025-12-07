@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -114,6 +115,9 @@ public class JwtFilter extends OncePerRequestFilter {
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid token", "Unexpected error processing token.");
             return;
         }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Authentication set in context: " + auth);
+        System.out.println("Authorities: " + (auth != null ? auth.getAuthorities() : "null"));
 
         filterChain.doFilter(request, response);
     }
