@@ -18,4 +18,5 @@ public class EventResponse {
     private double ticketPrice;
     private int ticketsRemaining;
     private String category;
+    private String imageUrl;
 }

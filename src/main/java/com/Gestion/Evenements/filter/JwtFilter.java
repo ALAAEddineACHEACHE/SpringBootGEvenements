@@ -39,10 +39,11 @@ public class JwtFilter extends OncePerRequestFilter {
         System.out.println("Authorization header raw: " + request.getHeader("Authorization"));
 
         // 1️⃣ Ignore public endpoints
-        if (request.getServletPath().startsWith("/api/auth/")) {
+        if (request.getServletPath().startsWith("/api/auth/") || request.getServletPath().startsWith("/api/events/uploads/")  || request.getServletPath().startsWith("/uploads/"))  {
             filterChain.doFilter(request, response);
             return;
         }
+
 
         // 2️⃣ Check Authorization header
         String authHeader = request.getHeader("Authorization");

@@ -6,6 +6,7 @@ import com.Gestion.Evenements.models.UserPrincipal;
 import com.Gestion.Evenements.models.enums.Role;
 import com.Gestion.Evenements.service.EventService.EventFileService;
 import com.Gestion.Evenements.service.EventService.EventService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -108,6 +109,7 @@ public class EventController {
     }
 
     @GetMapping("/uploads/{filename:.+}")
+    @PermitAll
     public ResponseEntity<?> getImage(@PathVariable String filename) {
         return eventFileService.getFile("", filename); // dossier racine "uploads"
     }
