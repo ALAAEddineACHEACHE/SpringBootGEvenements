@@ -1,14 +1,20 @@
 package com.Gestion.Evenements.service.ReservationService;
 
+import com.Gestion.Evenements.dto.EventResponse;
+import com.Gestion.Evenements.dto.PaymentResponse;
+import com.Gestion.Evenements.dto.ReservationResponse;
 import com.Gestion.Evenements.exception.ReservationException;
 import com.Gestion.Evenements.models.Event;
+import com.Gestion.Evenements.models.Payment;
 import com.Gestion.Evenements.models.Reservation;
 import com.Gestion.Evenements.models.User;
 import com.Gestion.Evenements.models.enums.ReservationStatus;
 import com.Gestion.Evenements.repo.EventRepository;
 import com.Gestion.Evenements.repo.ReservationRepository;
 import com.Gestion.Evenements.repo.UserRepository;
+import com.Gestion.Evenements.service.EventService.EventService;
 import com.Gestion.Evenements.service.NotificationService.NotificationService;
+import com.Gestion.Evenements.service.PaymentService.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,26 +30,11 @@ public class ReservationService implements IReservationService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final EventService eventService;
+    private final PaymentService paymentService;
 
     @Transactional
     public Reservation createReservation(Long eventId, Long userId, int quantity) {
-//        if (quantity <= 0) throw new RuntimeException("Quantity must be greater than 0");
-//        if (quantity > 4) throw new RuntimeException("Maximum 4 tickets per reservation");
-//
-//        Event event = eventRepository.findById(eventId)
-//                .orElseThrow(() -> new RuntimeException("Event not found"));
-//
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        int available = event.getTotalTickets() - event.getTicketsSold();
-//        if (quantity > available) throw new RuntimeException("Not enough tickets available");
-//
-//        // Vérifier les réservations existantes pour limiter à 4 tickets par user
-//        List<Reservation> existing = reservationRepository.findByUserIdAndEventId(userId, eventId);
-//        int alreadyReserved = existing.stream().mapToInt(Reservation::getQuantity).sum();
-//        if (alreadyReserved + quantity > 4)
-//            throw new RuntimeException("You cannot reserve more than 4 tickets for this event");
         if (quantity <= 0)
             throw new ReservationException("La quantité doit être supérieure à 0");
 
@@ -119,5 +110,68 @@ public class ReservationService implements IReservationService {
         // Supprimer réservation
         reservationRepository.delete(reservation);
     }
+    public List<ReservationResponse> getUserReservationsWithDetails(Long userId) {
+        List<Reservation> reservations = reservationRepository.findByUserId(userId);
 
+        return reservations.stream()
+                .map(reservation -> {
+                    ReservationResponse dto = new ReservationResponse();
+                    dto.setId(reservation.getId());
+                    dto.setQuantity(reservation.getQuantity());
+                    dto.setStatus(reservation.getStatus().name());
+                    dto.setCreatedAt(reservation.getReservedAt());
+                    dto.setEventId(reservation.getEventId());
+                    dto.setUserId(reservation.getUserId());
+                    dto.setTotalAmount(reservation.getTotalAmount());
+
+                    // Récupérer et mapper l'événement en utilisant EventResponse
+                    Event event = eventService.getEventById(reservation.getEventId());
+                    if (event != null) {
+                        dto.setEvent(mapToEventResponse(event));
+                    }
+
+                    // Récupérer et mapper le paiement en utilisant PaymentResponse
+                    Payment payment = paymentService.findByReservationId(reservation.getId());
+                    if (payment != null) {
+                        dto.setPayment(mapToPaymentResponse(payment));
+                    }
+
+                    return dto;
+                })
+                .toList();
+    }
+    private EventResponse mapToEventResponse(Event event) {
+        if (event == null) return null;
+
+        EventResponse eventResponse = new EventResponse();
+        eventResponse.setId(event.getId());
+        eventResponse.setTitle(event.getTitle());
+        eventResponse.setDescription(event.getDescription());
+        eventResponse.setLocation(event.getLocation());
+        eventResponse.setStartAt(event.getStartAt());
+        eventResponse.setEndAt(event.getEndAt());
+        eventResponse.setTicketPrice(event.getTicketPrice());
+        eventResponse.setTotalTickets(event.getTotalTickets());
+        eventResponse.setTicketsSold(event.getTicketsSold());
+        eventResponse.setTicketsRemaining(event.getTotalTickets() - event.getTicketsSold());
+        eventResponse.setImageUrl(event.getImageUrl());
+        eventResponse.setCategory(event.getCategory());
+        eventResponse.setOrganizerId(event.getOrganizerId());
+
+        return eventResponse;
+    }
+
+    // Utilisez PaymentResponse existant
+    private PaymentResponse mapToPaymentResponse(Payment payment) {
+        if (payment == null) return null;
+
+        PaymentResponse paymentResponse = new PaymentResponse();
+        paymentResponse.setId(payment.getId());
+        paymentResponse.setAmount(payment.getAmount());
+        paymentResponse.setStatus(payment.getStatus());
+        paymentResponse.setMethod(payment.getMethod());
+        paymentResponse.setPaidAt(payment.getPaidAt());
+
+        return paymentResponse;
+    }
 }

@@ -18,4 +18,9 @@ public class Reservation {
     private LocalDateTime reservedAt;
     @Enumerated(EnumType.STRING)
     private ReservationStatus status; // PENDING, PAID, CANCELLED
+    // Ajouter un getter pour createdAt (qui retourne reservedAt)
+    public LocalDateTime getCreatedAt() {
+        return this.reservedAt;
+    }
+
 }

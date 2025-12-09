@@ -2,6 +2,7 @@ package com.Gestion.Evenements.service.EventService;
 
 import com.Gestion.Evenements.dto.EventRequest;
 import com.Gestion.Evenements.dto.EventResponse;
+import com.Gestion.Evenements.models.Event;
 
 import java.util.List;
 
@@ -12,4 +13,6 @@ public interface IEventService {
     EventResponse update(Long id, EventRequest request);
     void delete(Long id);
     void reserveTicket(Long eventId, int quantity);
+    Event getEventById(Long eventId);
+
 }

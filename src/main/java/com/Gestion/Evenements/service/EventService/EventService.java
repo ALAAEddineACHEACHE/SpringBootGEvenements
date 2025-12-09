@@ -114,94 +114,7 @@ private Event toEntity(EventRequest request) {
         event.setTicketsSold(event.getTicketsSold() + quantity);
         eventRepository.save(event);
     }
-//    public EventResponse updateImage(Long eventId, MultipartFile image) {
-//        Event event = eventRepository.findById(eventId)
-//                .orElseThrow(() -> new RuntimeException("Event not found"));
-//
-//        if (image == null || image.isEmpty()) {
-//            throw new RuntimeException("No image provided");
-//        }
-//
-//        try {
-//            // Chemin absolu
-//            String uploadRoot = System.getProperty("user.dir") + "/uploads";
-//            Path dirPath = Paths.get(uploadRoot);
-//
-//            // Crée le dossier si nécessaire
-//            if (!Files.exists(dirPath)) {
-//                Files.createDirectories(dirPath);
-//            }
-//
-//            // Génère un nom de fichier sûr
-//            String fileName = image.getOriginalFilename();
-//            Path filePath = dirPath.resolve(fileName);
-//
-//            // Écriture réelle du fichier
-//            Files.copy(image.getInputStream(), filePath);
-//
-//            // Met à jour l'URL/path dans l'événement
-//            event.setImageUrl("/uploads/" + fileName);
-//            eventRepository.save(event);
-//
-//            return toResponse(event);
-//
-//        } catch (IOException e) {
-//            throw new RuntimeException("Failed to save image", e);
-//        }
-//    }
-
-//    public EventResponse updateImage(Long eventId, MultipartFile image) {
-//        Event event = eventRepository.findById(eventId)
-//                .orElseThrow(() -> new RuntimeException("Event not found"));
-//
-//        if (image == null || image.isEmpty()) {
-//            throw new RuntimeException("No image provided");
-//        }
-//
-//        try {
-//            // Chemin absolu
-//            String uploadRoot = System.getProperty("user.dir") + "/uploads";
-//            Path dirPath = Paths.get(uploadRoot);
-//
-//            // AJOUTER CES LOGS POUR DEBUG
-//            System.out.println("Current working directory: " + System.getProperty("user.dir"));
-//            System.out.println("Upload root path: " + uploadRoot);
-//            System.out.println("Absolute path: " + dirPath.toAbsolutePath());
-//
-//            // Crée le dossier si nécessaire
-//            if (!Files.exists(dirPath)) {
-//                System.out.println("Creating directory: " + dirPath);
-//                Files.createDirectories(dirPath);
-//            }
-//
-//            // Vérifier les permissions
-//            System.out.println("Directory exists: " + Files.exists(dirPath));
-//            System.out.println("Is directory: " + Files.isDirectory(dirPath));
-//            System.out.println("Is writable: " + Files.isWritable(dirPath));
-//
-//            // Génère un nom de fichier unique pour éviter les collisions
-//            String originalFilename = image.getOriginalFilename();
-//            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-//            String fileName = System.currentTimeMillis() + "_" + UUID.randomUUID() + fileExtension;
-//            Path filePath = dirPath.resolve(fileName);
-//
-//            System.out.println("Saving file to: " + filePath);
-//
-//            // Écriture réelle du fichier
-//            Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//
-//            // Met à jour l'URL/path dans l'événement
-//            event.setImageUrl("/uploads/" + fileName);
-//            eventRepository.save(event);
-//
-//            return toResponse(event);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace(); // Afficher la stack trace complète
-//            throw new RuntimeException("Failed to save image: " + e.getMessage(), e);
-//        }
-//    }
-public EventResponse updateImage(Long eventId, MultipartFile image) {
+    public EventResponse updateImage(Long eventId, MultipartFile image) {
     Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new RuntimeException("Event not found"));
 
@@ -262,4 +175,15 @@ public EventResponse updateImage(Long eventId, MultipartFile image) {
         throw new RuntimeException("Failed to save image: " + e.getMessage(), e);
     }
 }
+    public Event getEventById(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + eventId));
+    }
+
+    // Ajoutez aussi cette méthode si elle n'existe pas déjà
+    public Event findById(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+    }
+
 }
