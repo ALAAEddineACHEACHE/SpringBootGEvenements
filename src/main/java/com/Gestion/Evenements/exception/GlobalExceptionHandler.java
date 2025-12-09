@@ -38,4 +38,13 @@ public class GlobalExceptionHandler {
                         "message", ex.getMessage()
                 ));
     }
+    @ExceptionHandler(ReservationException.class)
+    public ResponseEntity<?> handleReservation(ReservationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "error", "Reservation Error",
+                        "message", ex.getMessage()
+                ));
+    }
+
 }

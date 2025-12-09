@@ -19,23 +19,6 @@ import java.util.Map;
 public class ReservationController {
 
     private final ReservationService reservationService;
-//    @PostMapping("/reserve")
-//    public ResponseEntity<?> reserve(@RequestBody ReservationRequest request,
-//                                     @AuthenticationPrincipal UserPrincipal principal) {
-//
-//        Long userId = principal.getUser().getId();
-//
-//        Reservation reservation = reservationService.createReservation(
-//                request.getEventId(),
-//                userId,
-//                request.getQuantity()
-//        );
-//
-//        return ResponseEntity.status(201).body(Map.of(
-//                "message", "Reservation created",
-//                "reservation", reservation
-//        ));
-//    }
 @PostMapping("/reserve")
 public ResponseEntity<?> reserve(@RequestBody ReservationRequest request,
                                  @AuthenticationPrincipal UserPrincipal principal) {
@@ -80,4 +63,18 @@ public ResponseEntity<?> reserve(@RequestBody ReservationRequest request,
                 "reservations", reservations
         ));
     }
+    @DeleteMapping("/{reservationId}")
+    public ResponseEntity<?> deleteReservation(
+            @PathVariable Long reservationId,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        Long userId = principal.getUser().getId();
+
+        reservationService.deleteReservation(reservationId, userId);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Reservation deleted successfully"
+        ));
+    }
+
 }
