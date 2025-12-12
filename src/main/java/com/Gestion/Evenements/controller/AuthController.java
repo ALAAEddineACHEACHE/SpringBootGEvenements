@@ -2,13 +2,20 @@ package com.Gestion.Evenements.controller;
 
 import annotations.ToVerifyAccountOnly;
 import com.Gestion.Evenements.dto.*;
+import com.Gestion.Evenements.models.User;
+import com.Gestion.Evenements.repo.UserRepository;
 import com.Gestion.Evenements.service.AuthService.IAuthService;
 import com.Gestion.Evenements.service.UserService.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,6 +25,7 @@ public class AuthController {
 
     private final IAuthService authService;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest request) throws MessagingException {
@@ -53,6 +61,18 @@ public class AuthController {
         userService.deleteUser(id);
         return ResponseEntity.ok(new MessageResponse("User deleted successfully"));
     }
+
+    @GetMapping("/count")
+    public Long getUserCount() {
+        return userRepository.count();
+    }
+    @GetMapping("/users")
+    public Page<User> getUsers(@RequestParam(defaultValue = "0") int page,
+                               @RequestParam(defaultValue = "4") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepository.findAll(pageable);
+    }
+
 
 
 }

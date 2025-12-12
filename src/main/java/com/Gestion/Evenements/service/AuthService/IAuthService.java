@@ -11,5 +11,6 @@ public interface IAuthService {
     MessageResponse verifyAccount(String verificationCode, String email) throws Exception;
 
     AuthResponse login(LoginRequest request);
+//    <T> for consistency
 
 }

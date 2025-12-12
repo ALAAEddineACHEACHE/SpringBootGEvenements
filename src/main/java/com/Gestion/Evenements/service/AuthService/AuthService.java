@@ -27,43 +27,6 @@ public class AuthService implements IAuthService {
     private final EmailService emailService;
 
     // ----------------- REGISTER -----------------
-
-//    @Transactional
-//    @Override
-//    public AuthResponse register(RegisterRequest request) throws MessagingException {
-//
-//        if (userRepository.existsByEmail(request.getEmail())) {
-//            throw new RuntimeException("Email already exists");
-//        }
-//
-//        if (userRepository.existsByUsername(request.getUsername())) {
-//            throw new RuntimeException("Username already exists");
-//        }
-//
-//        String verificationCode = generateVerificationCode();
-//
-//        User user = new User();
-//        user.setUsername(request.getUsername());
-//        user.setEmail(request.getEmail());
-//        user.setPassword(passwordEncoder.encode(request.getPassword()));
-//        user.setRoles(Set.of(Role.ROLE_USER));
-//        user.setEnabled(false);
-//        user.setVerificationCode(verificationCode);
-//
-//        userRepository.save(user);
-//
-//        emailService.sendVerificationEmail(request.getEmail(), verificationCode);
-//
-//        // Création du token d’inscription via JWTService
-//        String registrationToken = jwtService.generateRegistrationToken(user.getEmail());
-//
-//        return new AuthResponse(
-//                registrationToken,
-//                user.getUsername(),
-//                user.getEmail(),
-//                user.getRoles()
-//        );
-//    }
 @Transactional
 @Override
 public AuthResponse register(RegisterRequest request) throws MessagingException {
